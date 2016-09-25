@@ -221,4 +221,9 @@ return [
 
     ],
 
+    'auth' => [
+        /*'custom' => 'App\Providers\V1\WpyAuthServiceProvider',*/
+        'jwt' => 'Dingo\Api\Auth\Provider\JWT',
+    ],
+
 ];

@@ -113,4 +113,5 @@ class UserController extends BaseController
         $users = $this->api->get('users');
         return $users;
     }
+
 }
