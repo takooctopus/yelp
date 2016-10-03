@@ -13,32 +13,61 @@ use App\User;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
+use App\Repositories\UserRepository;
 
 
 /**
  * Class BaseController
  * @package App\Http\Controllers\Api\V1
  */
-class TokenController extends Controller
+class TokenController extends BaseController
 {
+    /**
+     * @var UserRepository
+     */
+    private $userRepository;
+
+    /**
+     * TokenController constructor.
+     */
+    public function __construct(UserRepository $userRepository)
+    {
+        $this->userRepository = $userRepository;
+    }
+
     public function getToken(Request $request)
     {
         // grab credentials from the request
         $wpy_token = $request->only('wpy_token')['wpy_token'];
         /*$wpy_token = $wpy_token['wpy_token'];*/
+        if (empty($wpy_token)) {
+            return $this->build_parameters_error();
+        }
         $item = $this->checkWPYToken($wpy_token);
-        $credentials = ['twtid' => $item->twtid,
+
+        if ($item->error_code){
+            return $this->build_error("微北洋Token验证SSO失败",401);
+        }
+
+        $twtid = $item->twtid;
+
+        $user = $this->userRepository->findByTwtidOrCreate($twtid);
+        $token = JWTAuth::fromUser($user);
+
+        return $this->build_response(['token' => $token]);
+
+        /*$credentials = ['twtid' => $item->twtid,
                         'twtuname' => $item->twtuname,
                         'realname' => $item->realname,
                         'studentid' => $item->studentid,];
-        //return $credentials;
+        return $credentials;*/
 
-        $user = User::where($credentials)->firstOrFail();
+        //$user = User::where($credentials)->firstOrFail();
 
-        $token = JWTAuth::fromUser($user);
+        //$token = JWTAuth::fromUser($user);
 
         // all good so return the token
-        return response()->json(compact('token'));
+        //return response()->json(compact('token'));
 
         /*return json_encode($credentials);
         $credentials = $request->only('wpy_token');
@@ -61,20 +90,20 @@ class TokenController extends Controller
         try {
 
             if (! $user = JWTAuth::parseToken()->authenticate()) {
-                return response()->json(['user_not_found'], 404);
+                return $this->build_error('user_not_found',404);
             }
 
         } catch (Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
 
-            return response()->json(['token_expired'], $e->getStatusCode());
+            return $this->build_error('token_expired',$e->getStatusCode());
 
         } catch (Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
 
-            return response()->json(['token_invalid'], $e->getStatusCode());
+            return $this->build_error('token_invalid',$e->getStatusCode());
 
         } catch (Tymon\JWTAuth\Exceptions\JWTException $e) {
 
-            return response()->json(['token_absent'], $e->getStatusCode());
+            return $this->build_error('token_absent',$e->getStatusCode());
 
         }
 
@@ -84,10 +113,18 @@ class TokenController extends Controller
 
     public function refreshToken()
     {
-        $token = JWTAuth::getToken();
-        $newToken = JWTAuth::refresh($token);
-        return response()->json(compact('newToken'));
+        try {
+            $newtoken = JWTAuth::parseToken()->refresh();
+        } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+            return $this->build_error('token expired', $e->getStatusCode());
+        } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
+            return $this->build_error('token invalid', $e->getStatusCode());
+        } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
+            return $this->build_error('token absent', $e->getStatusCode());
+        }
+        return $this->build_response($newtoken);
     }
+
     private function _request($url, $postData = null, $header = null) {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);

@@ -8,110 +8,154 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\User;
-use App\Transformers\V1\UserTransformer;
+use App\Http\Requests\Request;
+use App\Repositories\ImgRepository;
+use App\Services\UploadsManager;
+//use Symfony\Component\Console\Input\Input;
 
-/**
- * Class UserController
- * @package App\Http\Controllers\Api\V1
- */
-class UserController extends BaseController
+use Illuminate\Support\Facades\Storage;
+
+use Illuminate\Support\Facades\Input;
+use Webpatser\Uuid\Uuid;
+use Intervention\Image\Facades\Image;
+
+use App\Http\Requests\UploadImageRequest;
+use App\Http\Requests\DeleteImageRequest;
+use Illuminate\Support\Facades\File;
+
+
+
+class UploadController extends BaseController
 {
     /**
-     * @return string
+     * @var UploadsManager
      */
-    public function index()
+    private $manager;
+    /**
+     * @var ImgRepository
+     */
+    private $imgRepository;
+
+    /**
+     * UploadController constructor.
+     */
+    public function __construct(UploadsManager $manager, ImgRepository $imgRepository)
     {
-        return "usersIndex";
+        $this->manager = $manager;
+        $this->imgRepository = $imgRepository;
+    }
+
+    public function index(Request $request)
+    {
+
+    }
+
+    public function uploadImage(UploadImageRequest $request)
+    {
+        $folder = "";
+        $new_folder = "Image";
+        $folder = $folder.'/'.$new_folder;
+
+        $result = $this->manager->createDirectory($folder);
+
+        if ($result === true) {
+
+        }
+
+        $image = Input::file('image');
+        //$fileName = $image->getClientOriginalName();
+        $fileName = Uuid::generate().'.'.$image->getClientOriginalExtension();
+        $path = rtrim(config('yelp.uploads.savepath').str_finish($folder, '/'),'/');
+        //return $path;
+        $imagePath = $image->move($path, $fileName);
+        $result = Image::make($imagePath)->resize(300, 200)->save();
+        if(!$result){
+            $this->build_error("Image create error!!!");
+        }
+        $result = $this->imgRepository->createByUrl($imagePath);
+        if(!$result){
+            $this->build_error("Image Model create error!!!");
+        }
+        $img = $this->imgRepository->findById($result->id);
+        return $this->build_response($img);
+
+
+
+
+
+
+        //$result = Image::make($image)->resize(200, 200)->save($path);
+
+        /*$file = $_FILES['image'];
+        $image = $request->file('image');
+        $fileName = Uuid::generate();
+        $mimetype = $image->getMimeType();
+        $mime = explode('/',$mimetype);
+
+        $path = str_finish($folder, '/') . $fileName . "." . $mime[1];
+        //$path = str_finish($folder, '/') . $fileName;
+
+        $result = Image::make($image->getRealPath())->resize(200, 200)->save($path);
+        return $result;
+        //$content = File::get($file['tmp_name']);
+        //$result = $this->manager->saveFile($path, $content);
+
+        if ($result === true) {
+            //$img = $this->imgRepository->createByUrl($path);
+            //return $this->build_response($img);
+        }*/
     }
 
     /**
-     * User resource representation.
-     *
-     * @Resource("Users", uri="/users/{id}")
-     *
-     * @Get("/users/{id}")
-     * @Versions({"v1"})
-     * @Request("username=foo&password=bar", contentType="application/x-www-form-urlencoded")
-     * @Response(200, body={"id": 10, "username": "foo"})
-     * @Parameters({
-     *      @Parameter("page", description="The page of results to view.", default=1),
-     *      @Parameter("limit", description="The amount of results per page.", default=10)
-     * })
-     *
-     * @param $id
-     * @return mixed
+     * 删除文件
      */
-    public function show($id)
+    public function deleteImage(DeleteImageRequest $request)
     {
-        $user =  User::findOrFail($id);
 
-        /*return User::findOrFail($id);*/
-
-        /*$user =  User::findOrFail($id);
-
-        return $this->response->array($user->toArray());*/
-
-
-        /*$user = User::findOrFail($id);
-
-        return $this->response->item($user, new UserTransformer);*/
-
-        /*$users = User::all();
-
-        return $this->response->collection($users,new UserTransformer);*/
-
-        /*$users = User::paginate(10);
-
-        return $this->response->paginator($users, new UserTransformer);*/
-
-        /*return $this->response->noContent();*/
-
-        /*return $this->response->created();*/
-
-        /*// A generic error with custom message and status code.
-        return $this->response->error('This is an error.', 404);*/
-
-        /*// A not found error with an optional message as the first parameter.
-        return $this->response->errorNotFound();*/
-
-        /*// A bad request error with an optional message as the first parameter.
-        return $this->response->errorBadRequest();*/
-
-        /*// A forbidden error with an optional message as the first parameter.
-        return $this->response->errorForbidden();*/
-
-        /*// An internal error with an optional message as the first parameter.
-        return $this->response->errorInternal();*/
-
-        /*// An unauthorized error with an optional message as the first parameter.
-        return $this->response->errorUnauthorized();*/
-
-        /*return $this->response->item($user, new UserTransformer)->withHeader('X-Foo', 'Bar');*/
-
-        /*return $this->response->item($user, new UserTransformer)->addMeta('foo', 'bar');*/
-
-        /*$meta['foo'] = 'bar';
-        return $this->response->item($user, new UserTransformer)->setMeta($meta);*/
-
-        /*return $this->response->item($user, new UserTransformer)->setStatusCode(200);*/
-
-        /*$user = User::findOrFail($id);
-
-        // Attempt to authenticate the request. If the request is not authenticated
-        // then we'll hide the e-mail from the response. Only authenticated
-        // requests can see other users e-mails.
-        if (! app('Dingo\Api\Auth\Auth')->user()) {
-            $hidden = $user->getHidden();
-
-            $user->setHidden(array_merge($hidden, ['email']));
+        $img_id = $request->get('img_id');
+        $img_url = $this->imgRepository->returnUrlById($img_id);
+        if(!$img_url){
+            return $this->build_error("Img Model Not exist! ");
         }
 
-        return $user;*/
+        $result = File::Delete($img_url);
+        if (!$result){
+            $result = $this->imgRepository->deleteById($img_id);
+            if (!$result){
+                return $this->build_error("Delete Model Error!!!");
+            }
+            return $this->build_error("Img Not exist! ");
+        }
+        $result = $this->imgRepository->deleteById($img_id);
+        if (!$result){
+            return $this->build_error("Delete Model Error!!!");
+        }
+        return $this->build_response();
+        
+        /*$result = file_exists($img_url);
+        return (int)($result);*/
 
-        /*$dispatcher->attach(Input::files())->post('photos');*/
-        $users = $this->api->get('users');
-        return $users;
+        /*$path = $request->get('folder').'/'.$del_file;
+
+        $result = $this->manager->deleteFile($path);
+
+        if ($result === true) {
+            return redirect()
+                ->back()
+                ->withSuccess("File '$del_file' deleted.");
+        }
+
+        $error = $result ? : "An error occurred deleting file.";
+
+        $del_folder = $request->get('del_folder');
+        $folder = $request->get('folder').'/'.$del_folder;
+
+        $result = $this->manager->deleteDirectory($folder);
+
+        if ($result === true) {
+            return redirect()
+                ->back()
+                ->withSuccess("Folder '$del_folder' deleted.");
+        }*/
     }
-
 }

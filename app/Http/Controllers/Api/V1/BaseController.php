@@ -9,6 +9,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use Dingo\Api\Routing\Helpers;
+use App\Traits\ResponseBuilder;
 use Illuminate\Routing\Controller;
 
 /**
@@ -17,5 +18,6 @@ use Illuminate\Routing\Controller;
  */
 class BaseController extends Controller
 {
+    use ResponseBuilder;
     use Helpers;
 }

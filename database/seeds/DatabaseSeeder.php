@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
         //$this->call(UserTableSeeder::class);
         $this->call('UserTableSeeder');
         $this->call('CategoryTableSeeder');
+        $this->call('FoodTableSeeder');
 
         Model::reguard();
     }
@@ -38,5 +39,14 @@ class CategoryTableSeeder extends Seeder
     {
         App\Category::truncate();
         App\Category::create(['cid'=>1 ,'campus' => 1 , 'canteen'=> '学一','floor' => '二楼']);
+    }
+}
+
+class FoodTableSeeder extends Seeder
+{
+    public function run()
+    {
+        App\Food::truncate();
+        factory(App\Food::class, 20)->create();
     }
 }

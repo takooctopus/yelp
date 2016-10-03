@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use App\Http\Requests\Request;
 
-class UploadImageRequest extends Request
+class AddFoodRequest extends Request
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,7 +24,12 @@ class UploadImageRequest extends Request
     public function rules()
     {
         return [
-            'image' => 'required|image',
+            'name' => 'required',
+            'price' => 'required',
+            'category_id' => 'required',
+            'floor' => 'required',
+            'score' => 'required',
+            'imgs' => '',
         ];
     }
 }

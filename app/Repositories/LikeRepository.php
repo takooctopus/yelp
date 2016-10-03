@@ -8,22 +8,28 @@
 
 namespace App\Repositories;
 
-use App\Comment;
+use App\Like;
 
-class CommentRepository
+class LikeRepository
 {
-    public function createComment($data)
+    public function createLike($data)
     {
-        return Comment::Create([
-            'food_id' => $data['food_id'],
-            'vote' => $data['vote'],
-            'content' => $data['content'],
+        return Like::Create([
+            'comment_id' => $data['comment_id'],
+            'user_id' => $data['user_id'],
         ]);
     }
 
-    public function findCommentById($id)
+    public function deleteLike($data)
     {
-        $comment = Comment::find($id);
-        return $comment;
+        return Like::where('comment_id','=',$data['comment_id'])
+                    ->orWhere($data['user_id'])->delete();
     }
+
+    public function findLike($data)
+    {
+        return Like::where('comment_id','=',$data['comment_id'])
+            ->orWhere($data['user_id'])->first();
+    }
+    
 }

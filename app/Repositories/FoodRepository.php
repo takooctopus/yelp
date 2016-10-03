@@ -7,22 +7,35 @@
  */
 namespace App\Repositories;
 
-use App\User;
+use App\Food;
+use App\Img;
 
-class UserRepository
+class FoodRepository
 {
-    public function findByTwtid($twtid)
+    public function findFoodsBySequenceAndPagesize($sequence,$pagesize)
     {
-        return User::where('twtid','=',$twtid)->first();
+        $foods = Food::orderBy('id',$sequence)->paginate($pagesize);
+        return $foods;
+    }
+    public function findFoodsBySequenceCidAndPagesize($sequence,$cid, $pagesize)
+    {
+        $foods = Food::where('category_id','=',$cid)->orderBy('id',$sequence)->paginate($pagesize);
+        return $foods;
+    }
+    public function findFoodById($id)
+    {
+        $food = Food::find($id);
+        return $food;
     }
 
-    public function findByTwtidOrCreate($userData)
+    public function createFood($data)
     {
-        return User::firstOrCreate([
-            'twtid' => $userData->twtid,
-            'twtuname' => $userData->twtuname,
-            'realname' => $userData->realname,
-            'studentid' => $userData->studentid,
+        return Food::Create([
+            'name' => $data['name'],
+            'price' => $data['price'],
+            'category_id' => $data['category_id'],
+            'floor' => $data['floor'],
+            'score' => $data['score'],
         ]);
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+
 /*
 |--------------------------------------------------------------------------
 | Application Routes
@@ -20,28 +21,38 @@ $api = app('Dingo\Api\Routing\Router');
 
 
 $api->version('v1', function ($api) {
+    $api->get('test',function (){
+
+    });
+
     $api->get('token/getToken','App\Http\Controllers\Api\V1\TokenController@getToken');
     $api->get('token/checkToken','App\Http\Controllers\Api\V1\TokenController@checkToken');
     $api->get('token/refreshToken','App\Http\Controllers\Api\V1\TokenController@refreshToken');
 
-    $api->group(['middleware' => 'api.auth'],function ($api){
+    $api->post('upload/image', 'App\Http\Controllers\Api\V1\UploadController@uploadImage');
+    $api->delete('upload/image', 'App\Http\Controllers\Api\V1\UploadController@deleteImage');
+
+    $api->get('image/{id}','App\Http\Controllers\Api\V1\ImgController@showImage');
+
+    $api->post('food/addFood','App\Http\Controllers\Api\V1\FoodController@addFood');
+    $api->get('foods/{sequence}/all/pagesize/{pagesize}','App\Http\Controllers\Api\V1\FoodController@foodsAll')/*->where('sequence', '');*/;
+    $api->get('foods/{sequence}/category/{cid}/all/pagesize/{pagesize}','App\Http\Controllers\Api\V1\FoodController@foodsCategoryAll');
+    $api->get('food/{food_id}/detail','App\Http\Controllers\Api\V1\FoodController@foodDetail');
+
+    $api->post('comment/addComment','App\Http\Controllers\Api\V1\CommentController@addComment');//comment 的图片上传需要做
+    $api->get('comment/{comment_id}/detail','App\Http\Controllers\Api\V1\CommentController@commentDetail');
+
+    $api->post('comment/{$comment_id}/addLike','App\Http\Controllers\Api\V1\CommentController@addLike');
+    $api->post('comment/{$comment_id}/resLike','App\Http\Controllers\Api\V1\CommentController@resLike');
+    $api->post('comment/{$comment_id}/isLike','App\Http\Controllers\Api\V1\CommentController@isLike');
+
+    /*$api->group(['middleware' => 'api.auth'],function ($api){
         $api->get('test',function () {
             return "V1";
         });
-        /*$api->post('users', function () {
-            $rules = [
-                'username' => ['required', 'alpha'],
-                'password' => ['required', 'min:7']
-            ];
 
-            $payload = app('request')->only('username', 'password');
 
-            $validator = app('validator')->make($payload, $rules);
 
-            if ($validator->fails()) {
-                throw new Dingo\Api\Exception\StoreResourceFailedException('Could not create new user.', $validator->errors());
-            }
-        });*/
 
         $api->get('users', 'App\Http\Controllers\Api\V1\UserController@index');
         $api->get('users/{id}', 'App\Http\Controllers\Api\V1\UserController@show');
@@ -59,7 +70,7 @@ $api->version('v1', function ($api) {
 
 
         //$api->get('users/{id}', ['as' => 'users.index', 'uses' => 'Api\V1\UserController@show']);
-    });
+    });*/
 
 });
 

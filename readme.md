@@ -1,6 +1,11 @@
 #本程序为TWT-微北洋上的食堂菜品程序
+===
 
-#本程序采用JWT-AUTH验证逻辑
+-版本: v1
+-更新时间: 2016-09-22
+-URL:
+
+#本程序接入采用JWT-AUTH验证逻辑
     ##在向本程序所有进行请求时，需要添加一个Header
         ###Accept:application/vnd.YOUR_SUBTYPE.version+json
             +其中SubType 是 yelp

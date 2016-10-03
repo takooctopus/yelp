@@ -8,39 +8,22 @@
 
 namespace App\Repositories;
 
-use App\Img;
+use App\Comment;
 
-class ImgRepository
+class CommentRepository
 {
-    public function findById($id)
+    public function createComment($data)
     {
-        return Img::find($id);
-    }
-
-    public function createByUrl($url)
-    {
-        return Img::Create([
-            'url' => $url,
+        return Comment::Create([
+            'food_id' => $data['food_id'],
+            'vote' => $data['vote'],
+            'content' => $data['content'],
         ]);
     }
 
-    public function returnUrlById($id)
+    public function findCommentById($id)
     {
-        return Img::find($id)->url;
-    }
-
-    public function deleteById($id)
-    {
-        return Img::find($id)->delete();
-    }
-    public function bindBelongsToFoods($food_id,$img_ids)
-    {
-        $img = Img::whereIn('id',$img_ids)->update(['food_id' => $food_id]);
-        return $img;
-    }
-
-    public function returnIdAndUrlsByFood_id($food_id)
-    {
-        return Img::where('food_id','=',$food_id)->select('id','url as imgurl')->get();
+        $comment = Comment::find($id);
+        return $comment;
     }
 }

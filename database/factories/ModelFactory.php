@@ -19,3 +19,12 @@ $factory->define(App\User::class, function (Faker\Generator $faker) {
         'remember_token' => str_random(10),
     ];
 });
+
+$factory->define(App\Food::class, function (Faker\Generator $faker) {
+    return [
+        'name' => $faker->colorName,
+        'price' => $faker->randomFloat(),
+        'category_id' => $faker->numberBetween(1,9),
+        'score' => $faker->randomFloat(),
+    ];
+});
